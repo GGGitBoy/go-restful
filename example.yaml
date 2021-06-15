@@ -8,7 +8,7 @@ spec:
   groupPriorityMinimum: 1000
   versionPriority: 15
   service:
-    name: virt-api
-    namespace: harvester-system
-    port: 443
+    name: demo
+    namespace: default
+    port: 8080
   version: v1

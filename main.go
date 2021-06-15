@@ -3,13 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/emicklei/go-restful"
-	promapi "github.com/prometheus/client_golang/api"
-	promapiv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/emicklei/go-restful"
+	promapi "github.com/prometheus/client_golang/api"
+	promapiv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 )
 
 type MyHandler struct {
@@ -57,6 +60,30 @@ func registerHandler(resource string, ws *restful.WebService) {
 		Returns(http.StatusNotFound, "Not Found", "")
 
 	routes = append(routes, route)
+
+	route2 := ws.GET("/").
+		Produces(restful.MIME_JSON).
+		Writes(metav1.APIResourceList{}).
+		To(func(request *restful.Request, response *restful.Response) {
+			list := &metav1.APIResourceList{}
+
+			list.Kind = "APIResourceList"
+			list.GroupVersion = "subresources.harvester.io/v1"
+			list.APIVersion = "v1"
+			list.APIResources = []metav1.APIResource{
+				{
+					Name:       "virtualmachineinstances/kubevirt_vmi_network_errors_total",
+					Namespaced: true,
+				},
+			}
+
+			response.WriteAsJson(list)
+		}).
+		Doc("Get a KubeVirt API resources").
+		Returns(http.StatusOK, "OK", metav1.APIResourceList{}).
+		Returns(http.StatusNotFound, "Not Found", "")
+
+	routes = append(routes, route2)
 
 	for _, route := range routes {
 		ws.Route(route)
@@ -124,5 +151,6 @@ func main() {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-	log.Fatal(s.ListenAndServe())
+
+	log.Fatal(s.ListenAndServeTLS("server.pem", "server.key"))
 }
