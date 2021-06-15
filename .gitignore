@@ -5,6 +5,14 @@
 *.so
 *.dylib
 
+.DS_Store
+*.db
+/.db
+/.idea
+.dapper
+/bin
+/dist
+/vendor
 # Test binary, built with `go test -c`
 *.test
 
